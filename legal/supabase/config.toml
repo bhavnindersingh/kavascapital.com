@@ -1,0 +1,62 @@
+# Supabase project for legal.kavascapital.com (ref jgljyprtjtndujujdvuy).
+# Local ports (5434x) stay clear of other local Supabase stacks.
+# Link once with: supabase link --project-ref jgljyprtjtndujujdvuy
+project_id = "kavas-legal"
+
+[api]
+enabled = true
+port = 54341
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54342
+shadow_port = 54340
+major_version = 17
+
+[studio]
+enabled = false
+port = 54343
+
+[inbucket]
+enabled = false
+port = 54344
+
+[realtime]
+enabled = false
+
+[analytics]
+enabled = false
+port = 54347
+
+[db.pooler]
+enabled = false
+port = 54349
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+site_url = "https://legal.kavascapital.com"
+additional_redirect_urls = [
+  "https://legal.kavascapital.com/reset-password",
+  "http://localhost:3000/reset-password",
+]
+# Logins are created by an admin on the Users page, never by sign-up.
+enable_signup = false
+
+# Email + password is how everyone signs in. (`enable_signup` here would turn
+# the whole email provider off, logins included — only [auth] blocks sign-ups.)
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+# The whole API is one function. It verifies the bearer itself (auth.getUser,
+# then an active users row), so the gateway's legacy JWT check is off: it
+# rejects tokens signed with the newer asymmetric keys, and CORS preflights
+# carry no token at all.
+[functions.api]
+verify_jwt = false

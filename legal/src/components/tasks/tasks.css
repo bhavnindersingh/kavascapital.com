@@ -1,0 +1,604 @@
+/*
+ * Tasks — the metrics and type scale, taken from the Nimai POS board.
+ *
+ * WHY A STYLESHEET AND NOT UTILITIES. This is a tight, squared-off design with
+ * a 4px priority rail, nested selectors and a Gantt grid — the kind of thing a
+ * className soup expresses badly. It stays a stylesheet for structure, not for
+ * numbers.
+ *
+ * TYPE AND COLOUR BOTH COME FROM THE DESIGN SYSTEM. Every size below is a
+ * `var(--t-*)` and every colour an `hsl(var(--token))` from `index.css`, the
+ * same ramps `tailwind.config.js` reads — so this file cannot fork from the
+ * utilities. It used to carry its own px, and had drifted to a 9px comment
+ * byline and 1.25/1.75rem headings that were on no ramp at all. The POS's cream
+ * and Sindoor crimson are not here.
+ *
+ * The one rule carried over intact is the colour rule:
+ *   a DOT is STATUS · a BAR is PRIORITY · a FILLED crimson mark means LATE.
+ */
+
+.tk {
+  --tk-radius: 3px;
+  --tk-line: hsl(var(--border));
+  --tk-surface: hsl(var(--card));
+  --tk-sunk: hsl(var(--background));
+  --tk-text: hsl(var(--foreground));
+  --tk-muted: hsl(var(--muted-foreground));
+  --tk-late: hsl(var(--destructive));
+
+  /* Status — a DOT. Same five steps as the POS, re-valued for a dark ground. */
+  --tk-todo: hsl(215 20% 65%);
+  --tk-progress: hsl(217 91% 60%);
+  --tk-hold: hsl(32 95% 55%);
+  --tk-qc: hsl(258 90% 66%);
+  --tk-done: hsl(142 71% 45%);
+
+  /* Priority — a BAR, and a VALUE ramp. Inverted from the POS's pale→ink,
+     because ink is this app's background: faint → grey → amber → red. Urgent
+     tops the ramp in the app's own red, not the old near-white: the top rank
+     has to read as an alarm down a column, and white read as merely bright.
+     It stays a BAR — the filled-crimson mark is still late's alone. */
+  --tk-pri-low: hsl(215 25% 27%);
+  --tk-pri-medium: hsl(215 20% 45%);
+  --tk-pri-high: hsl(38 92% 50%);
+  --tk-pri-urgent: hsl(var(--destructive));
+}
+
+/* Day theme (no `.dark` on <html>): the same steps re-valued for a white
+   ground — same hues, darker, so a dot or bar still reads. The ONE COLOUR
+   RULE is unchanged. */
+:root:not(.dark) .tk {
+  --tk-todo: hsl(215 16% 47%);
+  --tk-progress: hsl(217 91% 50%);
+  --tk-hold: hsl(32 95% 44%);
+  --tk-qc: hsl(258 70% 55%);
+  --tk-done: hsl(142 71% 35%);
+  --tk-pri-low: hsl(215 20% 82%);
+  --tk-pri-medium: hsl(215 16% 60%);
+  --tk-pri-high: hsl(38 92% 45%);
+}
+
+/* ── Type scale ─────────────────────────────────────────────────────────── */
+
+.tk-label,
+.tk-section-title {
+  display: block;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+}
+.tk-section-note {
+  margin-left: 8px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.tk-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--t-meta);
+  line-height: 1.45;
+  color: var(--tk-muted);
+}
+
+.tk-input {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 10px;
+  font-size: var(--t-body);
+  color: var(--tk-text);
+  background: var(--tk-sunk);
+  border: 1px solid var(--tk-line);
+  border-radius: var(--tk-radius);
+}
+.tk-input:focus {
+  outline: none;
+  border-color: hsl(var(--ring));
+}
+.tk-input::placeholder { color: var(--tk-muted); }
+.tk-textarea {
+  resize: vertical;
+  line-height: 1.5;
+  min-height: 130px;
+  max-height: 42vh;
+  overflow-y: auto;
+}
+
+/* ── The board: five columns across, never a scroller ───────────────────── */
+
+.tk-board {
+  display: grid;
+  /* One column per status, all in one row — count this with STATUS_ORDER. */
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+  height: 100%;
+  overflow-y: auto;
+}
+.tk-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 120px;
+  background: var(--tk-surface);
+  border: 1px solid var(--tk-line);
+  border-radius: var(--tk-radius);
+}
+.tk-column-over {
+  border-color: hsl(var(--ring));
+  background: hsl(var(--primary) / 0.06);
+}
+.tk-column-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--tk-line);
+}
+.tk-column-head h3 {
+  margin: 0;
+  font-size: var(--t-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+}
+.tk-column-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.tk-column-count {
+  margin-left: auto;
+  font-size: var(--t-eyebrow);
+  font-variant-numeric: tabular-nums;
+  color: var(--tk-muted);
+}
+.tk-column-note {
+  font-size: var(--t-micro);
+  color: var(--tk-qc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tk-column-add {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 2px;
+  color: var(--tk-muted);
+}
+.tk-column-add:hover { background: hsl(var(--accent)); color: var(--tk-text); }
+.tk-column-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  min-height: 60px;
+}
+.tk-column-empty {
+  padding: 18px 10px;
+  font-size: var(--t-meta);
+  color: var(--tk-muted);
+  border: 1px dashed var(--tk-line);
+  border-radius: var(--tk-radius);
+}
+.tk-column-empty:hover { border-color: hsl(var(--ring)); color: var(--tk-text); }
+
+/* ── The card ───────────────────────────────────────────────────────────── */
+
+.tk-card {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding: 10px 10px 10px 0;
+  background: var(--tk-surface);
+  border: 1px solid var(--tk-line);
+  border-radius: var(--tk-radius);
+  overflow: hidden;
+  cursor: pointer;
+  text-align: left;
+}
+.tk-card:hover {
+  border-color: hsl(var(--ring) / 0.5);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.tk-card:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: -1px; }
+.tk-card-late { border-color: hsl(var(--destructive) / 0.5); }
+.tk-card-dragging { opacity: 0.4; }
+/* PRIORITY at full strength on every card — the strongest scanning position,
+   and the one thing worth reading down a column without reading the cards. */
+.tk-card-rail {
+  width: 4px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  align-self: stretch;
+  touch-action: none;
+  cursor: grab;
+}
+.tk-card-body { min-width: 0; flex: 1 1 auto; }
+.tk-card-title {
+  margin: 0;
+  font-size: var(--t-body);
+  line-height: 1.35;
+  color: var(--tk-text);
+}
+.tk-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.tk-card-progress {
+  margin-top: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background: hsl(var(--secondary));
+  overflow: hidden;
+}
+.tk-card-progress > span { display: block; height: 100%; background: hsl(var(--primary)); }
+
+/* ── Chips ──────────────────────────────────────────────────────────────── */
+
+.tk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 7px;
+  border: 1px solid var(--tk-line);
+  border-radius: 2px;
+  background: var(--tk-sunk);
+  font-size: var(--t-eyebrow);
+  color: var(--tk-muted);
+  white-space: nowrap;
+}
+.tk-chip-text { overflow: hidden; text-overflow: ellipsis; }
+/* THE ONE ALARM. A filled crimson mark means late and nothing else. */
+.tk-chip-late {
+  border-color: transparent;
+  background: var(--tk-late);
+  color: hsl(var(--destructive-foreground));
+  font-weight: 600;
+}
+.tk-chip-soon { border-color: hsl(var(--warning) / 0.35); color: hsl(38 92% 60%); }
+/* Ink, NOT crimson: a card both waiting and late wore two red chips saying
+   different things. Waiting is a state of the plan; late is a problem. */
+.tk-chip-blocked { border-color: hsl(var(--secondary)); background: hsl(var(--secondary) / 0.5); }
+.tk-chip-pri-high { border-color: hsl(var(--warning) / 0.35); color: hsl(38 92% 60%); }
+/* Stark red, but OUTLINED. A filled crimson pill is late's and only late's,
+   so an urgent card that is also overdue still wears two distinguishable
+   chips: a solid one for the problem, a hollow one for the rank. */
+.tk-chip-pri-urgent {
+  border-color: hsl(var(--destructive) / 0.55);
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(0 84% 71%);
+  font-weight: 600;
+}
+
+/* ── The person disc ────────────────────────────────────────────────────── */
+
+.tk-avatar {
+  width: 25px;
+  height: 25px;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+/* Two call sites need a smaller and a larger disc. The initials stay ON the
+   ramp: the small disc drops a step, the large one gains one. */
+.tk-avatar-sm { width: 18px; height: 18px; font-size: var(--t-micro); }
+.tk-avatar-lg { width: 34px; height: 34px; font-size: var(--t-meta); }
+.tk-avatar-empty {
+  border: 1px dashed var(--tk-line);
+  color: var(--tk-muted);
+}
+
+/* ── The board rail ─────────────────────────────────────────────────────── */
+
+.tk-rail-title {
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+}
+.tk-rail-btn { font-size: var(--t-body); }
+.tk-rail-count { font-size: var(--t-eyebrow); font-variant-numeric: tabular-nums; }
+.tk-rail-empty { font-size: var(--t-meta); color: var(--tk-muted); }
+.tk-rail-archive-toggle {
+  font-size: var(--t-eyebrow);
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+}
+
+/* ── The board bar (page head) ──────────────────────────────────────────── */
+
+.tk-boardbar-name { margin: 0; font-size: var(--t-display); font-weight: 500; line-height: 1.2; }
+.tk-boardbar-desc { font-size: var(--t-body); color: var(--tk-muted); }
+.tk-filter-note { font-size: var(--t-meta); color: var(--tk-muted); }
+
+/* ── Empty states ───────────────────────────────────────────────────────── */
+
+.tk-first-run-eyebrow {
+  font-size: var(--t-micro);
+  letter-spacing: var(--tr-eyebrow);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+}
+.tk-blank-title { font-size: var(--t-display); font-weight: 500; margin: 0; }
+.tk-blank-body { font-size: var(--t-body); color: var(--tk-muted); }
+
+/* ── The drawer: A CENTRED MODAL, two columns ───────────────────────────── */
+/*
+ * It was a rail down the right edge holding ten stacked sections — a long
+ * scroll on a screen that was otherwise empty, with the controls you came to
+ * use somewhere below the fold. Centred, it is two columns: the WORK on the
+ * left, the FACTS about it on the right, each scrolling on its own so the
+ * status and the due date stay in view while a discussion is read past them.
+ *
+ * Sized in vw/vh with a ceiling rather than a fixed box: the board is read on
+ * tablets and on laptops, and a modal that overflows either is worse than one
+ * that is merely smaller than it could be.
+ */
+.tk-scrim { position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, 0.6); }
+.tk-drawer {
+  position: fixed;
+  z-index: 91;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(1140px, 94vw);
+  height: min(820px, 90vh);
+  display: flex;
+  flex-direction: column;
+  background: var(--tk-surface);
+  border: 1px solid var(--tk-line);
+  border-radius: var(--tk-radius);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.tk-drawer-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--tk-line);
+  flex: 0 0 auto;
+}
+.tk-dw-ident { min-width: 0; flex: 1 1 auto; }
+.tk-dw-board {
+  margin: 0 0 2px;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+}
+/* THE TITLE IS THE HEADING AND YOU TYPE INTO IT. Borderless until touched, so
+   it reads as the task's name rather than as a form field; the underline on
+   hover and the ruled box on focus are what say it is editable. This is the one
+   loud move in the drawer — everything around it stays quiet. */
+.tk-dw-title {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 2px 6px 2px 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: none;
+  font-size: var(--t-display);
+  line-height: 1.15;
+  font-weight: 500;
+  color: var(--tk-text);
+  resize: none;
+  overflow: hidden;
+}
+.tk-dw-title::placeholder { color: var(--tk-muted); }
+.tk-dw-title:hover { border-bottom-color: var(--tk-line); }
+.tk-dw-title:focus { outline: none; border-bottom-color: hsl(var(--ring)); }
+
+/* The body is a ROW holding the two columns, and it does not scroll — each
+   column does, so the facts rail cannot be pushed off the screen by a long
+   discussion beside it. */
+.tk-drawer-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+}
+.tk-dw-main,
+.tk-dw-side {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tk-dw-main { flex: 1 1 auto; min-width: 0; }
+.tk-dw-side {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: 380px;
+  border-left: 1px solid var(--tk-line);
+  background: var(--tk-sunk);
+}
+.tk-drawer-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--tk-line);
+  background: var(--tk-sunk);
+  flex: 0 0 auto;
+}
+.tk-field-row {
+  display: grid;
+  /* minmax(0, 1fr), never a bare 1fr: a date input has an intrinsic min-content
+     width of ~150px in Chrome, and two of them plus the gap refuse to fit a
+     narrow facts rail — which shows up as a horizontal scrollbar. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+/* ── Segmented controls, not dropdowns ──────────────────────────────────── */
+/*
+ * Both lists are fixed sets, so a select hid the options behind a tap and said
+ * nothing about the ORDER they run in — and the order is the information:
+ * To Do → In Progress → On Hold → Quality Check → Done is the route work takes.
+ *
+ * Status STACKS rather than laying across: five options in a 380px rail gives
+ * each ~58px, which ellipsises "In Progress" and "Quality Check", and a segment
+ * whose labels you cannot read is a select with extra steps.
+ */
+.tk-seg {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: hsl(var(--secondary) / 0.4);
+  border: 1px solid var(--tk-line);
+  border-radius: var(--tk-radius);
+}
+.tk-seg-stack { flex-direction: column; }
+.tk-seg-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 auto;
+  padding: 6px 8px;
+  font-size: var(--t-eyebrow);
+  border-radius: 2px;
+  color: var(--tk-muted);
+  text-align: left;
+}
+.tk-seg-btn:hover { background: hsl(var(--accent)); color: var(--tk-text); }
+.tk-seg-on { background: var(--tk-surface); color: var(--tk-text); box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.tk-seg-off { opacity: 0.45; cursor: not-allowed; }
+.tk-seg-dot { width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.tk-seg-bar { width: 3px; height: 12px; border-radius: 2px; flex: 0 0 auto; }
+.tk-seg-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Panels (Discussion / Files / Activity) ─────────────────────────────── */
+
+.tk-panel-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--tk-line); }
+.tk-panel-tab {
+  padding: 7px 10px;
+  font-size: var(--t-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+  border-bottom: 2px solid transparent;
+}
+.tk-panel-tab:hover { color: var(--tk-text); }
+.tk-panel-tab.is-on { color: var(--tk-text); border-bottom-color: hsl(var(--primary)); }
+
+.tk-sub-title { font-size: var(--t-body); }
+.tk-comment-who { font-size: var(--t-micro); font-weight: 600; letter-spacing: normal; }
+.tk-comment-meta { font-size: var(--t-eyebrow); color: var(--tk-muted); }
+.tk-comment-meta b { font-size: var(--t-meta); font-weight: 600; color: var(--tk-text); }
+.tk-comment-text { font-size: var(--t-body); line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.tk-file-name { font-size: var(--t-body); }
+.tk-file-meta { font-size: var(--t-eyebrow); color: var(--tk-muted); }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+
+.tk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: var(--t-eyebrow);
+  font-weight: 600;
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  border: 1px solid var(--tk-line);
+  border-radius: var(--tk-radius);
+  color: var(--tk-text);
+  background: var(--tk-surface);
+}
+.tk-btn:hover { background: hsl(var(--accent)); }
+.tk-btn-primary {
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+.tk-btn-primary:hover { background: hsl(var(--primary) / 0.9); }
+.tk-btn-danger { color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / 0.4); }
+.tk-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Lists (flat view + person view) ────────────────────────────────────── */
+
+.tk-list { width: 100%; border-collapse: collapse; font-size: var(--t-body); }
+.tk-list th {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--tk-line);
+}
+.tk-list th button {
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: var(--tr-widest);
+  text-transform: uppercase;
+  color: var(--tk-muted);
+}
+.tk-list th button:hover { color: var(--tk-text); }
+.tk-list td { padding: 8px 10px; border-bottom: 1px solid hsl(var(--border) / 0.5); }
+.tk-list tbody tr { cursor: pointer; }
+.tk-list tbody tr:hover { background: hsl(var(--accent) / 0.6); }
+.tk-list-num { text-align: right; font-variant-numeric: tabular-nums; }
+.tk-list-pri { width: 3px; height: 15px; border-radius: 2px; display: inline-block; flex: 0 0 auto; }
+.tk-person-group-head h3 { margin: 0; font-size: var(--t-display); font-weight: 500; }
+.tk-person-group-count { font-size: var(--t-eyebrow); font-variant-numeric: tabular-nums; color: var(--tk-muted); }
+.tk-person-group-note { font-size: var(--t-meta); color: var(--tk-muted); }
+
+/* ── Timeline ───────────────────────────────────────────────────────────── */
+
+.tk-gantt-label { font-size: var(--t-meta); }
+.tk-gantt-label-board { font-size: var(--t-micro); color: var(--tk-muted); }
+.tk-gantt-col { font-size: var(--t-eyebrow); }
+.tk-gantt-col-sub { font-size: var(--t-micro); letter-spacing: var(--tr-widest); text-transform: uppercase; color: var(--tk-muted); }
+.tk-gantt-legend { font-size: var(--t-eyebrow); color: var(--tk-muted); }
+.tk-gantt-empty { font-size: var(--t-body); color: var(--tk-muted); }
+.tk-tray-title { font-size: var(--t-micro); font-weight: 600; letter-spacing: var(--tr-widest); text-transform: uppercase; color: var(--tk-muted); }
+.tk-tray-count { font-size: var(--t-eyebrow); font-variant-numeric: tabular-nums; }
+.tk-tray-hint { font-size: var(--t-meta); color: var(--tk-muted); }
+.tk-tray-item { font-size: var(--t-meta); }
+
+/* ── The progress slider ────────────────────────────────────────────────── */
+/*
+ * `appearance-none` strips the native control, which also strips the TRACK,
+ * leaving a thumb floating on nothing. Track and thumb are drawn back per
+ * engine. `--secondary`, not `--muted`: muted is the same #1e293b as the card
+ * in this theme, so a muted track on a card is a track you cannot see.
+ */
+.tk-range { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; background: transparent; cursor: pointer; }
+.tk-range:focus { outline: none; }
+.tk-range::-webkit-slider-runnable-track { height: 6px; border-radius: 9999px; background: hsl(var(--secondary)); }
+.tk-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; margin-top: -4px;
+  height: 14px; width: 14px; border-radius: 9999px;
+  background: hsl(var(--primary)); border: 2px solid hsl(var(--card));
+}
+.tk-range::-moz-range-track { height: 6px; border-radius: 9999px; background: hsl(var(--secondary)); }
+.tk-range::-moz-range-progress { height: 6px; border-radius: 9999px; background: hsl(var(--primary)); }
+.tk-range::-moz-range-thumb { height: 14px; width: 14px; border-radius: 9999px; background: hsl(var(--primary)); border: 2px solid hsl(var(--card)); }
+
+/* ── Narrow screens: the modal goes full-bleed and the columns stack ─────── */
+@media (max-width: 860px) {
+  .tk-board { grid-template-columns: minmax(0, 1fr); }
+  .tk-drawer { width: 100vw; height: 100vh; top: 0; left: 0; transform: none; border: 0; border-radius: 0; }
+  .tk-drawer-body { flex-direction: column; }
+  .tk-dw-side { width: auto; border-left: 0; border-top: 1px solid var(--tk-line); }
+}

@@ -1,0 +1,230 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * shadcn/ui design tokens - stock `neutral` base, day and night themes.
+ *
+ * `:root` is DAY (light); `.dark` on <html> is NIGHT, the default. The class
+ * is set before first paint by the inline script in index.html and toggled by
+ * src/stores/themeStore.ts (the Sun/Moon button in the header). The numbered
+ * ramps (`dark-*`, `primary-*`, `gray`, `white`, vivid scales) flip through the
+ * `--c-*` variables that tailwind.config.js emits.
+ *
+ * These are shadcn's own values, not a brand remap: a near-black base
+ * (#0a0a0a) and a near-white `--primary`. The `dark-*` and `primary-*` Tailwind
+ * scales in tailwind.config.js are the matching neutral ramps, so the ~2600
+ * existing utility uses land on the same palette.
+ *
+ * `--success` / `--warning` stay vivid: on this desk green/red/amber carry P&L
+ * and trigger state, which is information, not decoration.
+ */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142.1 76.2% 36.3%;
+    --success-foreground: 0 0% 98%;
+    --warning: 32.1 94.6% 43.7%;
+    --warning-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --radius: 3px;
+    color-scheme: light;
+
+    /* Categorical accents — see .dark for the rule that governs them. */
+    --cat-1: 174 60% 32%;
+    --cat-2: 196 70% 42%;
+    --cat-3: 224 55% 42%;
+    --cat-4: 252 55% 58%;
+    --cat-5: 288 45% 45%;
+    --cat-6: 322 55% 50%;
+    --cat-7: 30 25% 40%;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;              /* #0a0a0a */
+    --foreground: 0 0% 98%;               /* #fafafa */
+    --card: 0 0% 3.9%;                    /* #0a0a0a - same as page, per shadcn */
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;                 /* #0a0a0a */
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;                  /* #fafafa - near-white */
+    --primary-foreground: 0 0% 9%;        /* #171717 - dark text on it */
+    --secondary: 0 0% 14.9%;              /* #262626 */
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;                  /* #262626 */
+    --muted-foreground: 0 0% 63.9%;       /* #a3a3a3 */
+    --accent: 0 0% 14.9%;                 /* #262626 */
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%;         /* #ef4444 */
+    --destructive-foreground: 0 0% 98%;
+    --success: 142.1 70.6% 45.3%;         /* #22c55e */
+    --success-foreground: 0 0% 9%;
+    --warning: 37.7 92.1% 50.2%;          /* #f59e0b */
+    --warning-foreground: 0 0% 9%;
+    --border: 0 0% 14.9%;                 /* #262626 */
+    --input: 0 0% 14.9%;                  /* #262626 */
+    --ring: 0 0% 83.1%;                   /* #d4d4d4 */
+    color-scheme: dark;
+
+    /*
+     * Categorical accents — a CLOSED, EVENLY-SPACED ramp.
+     *
+     * These exist to keep CATEGORIES APART (leg types, pair 1/2/3, cadence
+     * tags, chart series) and they mean nothing on their own. A hue here is
+     * never "the accent colour": chrome — buttons, spinners, table heads,
+     * selection, labels — is neutral, and a control that wears one of these
+     * is a bug.
+     *
+     * They deliberately avoid the red/amber (0-60) and green (100-160) bands,
+     * because on this desk those carry P&L and trigger state. A category that
+     * borrowed them would read as a number going the wrong way. Hue alone cannot hold seven steps apart once those bands
+     * are out — it crams four of them into purple — so the ramp alternates
+     * LIGHTNESS as a second channel: neighbours differ in value as well as
+     * hue. The seventh is a warm taupe, far enough off `warning`'s 92%
+     * saturation that it never reads as the trigger amber.
+     * The chips these sit on always carry a text label, so hue is a scanning
+     * aid rather than the only channel — which is what lets the set be this
+     * large without any step having to be garish to stay apart.
+     */
+    --cat-1: 174 55% 45%;
+    --cat-2: 196 70% 68%;
+    --cat-3: 224 55% 52%;
+    --cat-4: 252 70% 78%;
+    --cat-5: 288 42% 58%;
+    --cat-6: 322 60% 74%;
+    --cat-7: 30 20% 58%;
+  }
+}
+
+/*
+ * Theme-independent tokens. These used to sit inside `.dark`, which was fine
+ * while the app was dark-only; they live on `:root` so day mode keeps them.
+ */
+@layer base {
+  :root {
+    /* ── Type ramp — the one source of truth ────────────────────────────
+     * Copied from the Nimai POS (HouseofNimai/apps/pos/src/styles.css).
+     * THE SIZES ARE A CLOSED SET, named by ROLE. A size that is not on this
+     * ramp is a decision to make HERE, once, never at a call site.
+     * HALF-PIXEL VALUES ARE DRIFT, NOT STEPS — and so is a step that lands
+     * within a pixel of its neighbour. `--t-display-sm` used to be 1.2rem
+     * (19.2px), a second spelling of `--t-title`; its nineteen call sites
+     * were metric values and are now on the metric ladder below.
+     *
+     * `tailwind.config.js` reads these, and so does components/tasks/tasks.css,
+     * so the utility ramp and the stylesheet ramp cannot drift apart.
+     *
+     * 2026-09-03: the bottom four steps moved up 1px (10/11/12/13 ->
+     * 11/12/13/14). The 10px floor was unreadable in practice — not because
+     * 10px is too small on its own, but because 87 of its call sites are
+     * UPPERCASE with 0.12-0.16em tracking, which strips word shape and spaces
+     * the letters apart until you read them one at a time. Contrast was never
+     * the problem (#a3a3a3 on #0a0a0a is 7.85:1, AAA). `--t-lead` went with
+     * this change: it was 14px, which is now `--t-body`, and a duplicate step
+     * is exactly what this ramp exists to prevent. It had no call sites and
+     * no alias pointing at it, so nothing had to move.
+     */
+    --t-micro: 11px;    /* the label band, and the smallest thing we set */
+    --t-eyebrow: 12px;  /* the same band on a CONTROL — button, chip, toggle */
+    --t-meta: 13px;     /* timestamps, secondary facts */
+    --t-body: 14px;     /* default UI text — the app's real body size */
+    --t-subhead: 16px;  /* section subheads */
+    --t-title: 18px;    /* panel titles, and the CARD rung of the metric ladder */
+    --t-display: 1.5rem;    /* the page head, and the HERO rung */
+    --t-display-lg: 2.3rem; /* the dashboard's one headline figure */
+
+    /* ── The tracked-uppercase band ─────────────────────────────────────
+     * Nimai's labels are uppercase and widely tracked; Tailwind's widest is
+     * 0.1em, which is not enough. A CLOSED SET, like the type ramp: tasks.css
+     * had drifted to 0.04 / 0.08 / 0.1 / 0.14 / 0.18 / 0.28em, six values
+     * that are all rounding errors on the five below.
+     */
+    --tr-wide: 0.06em;
+    --tr-wider: 0.12em;
+    --tr-widest: 0.16em;   /* the label band's own tracking */
+    --tr-eyebrow: 0.2em;
+    --tr-brand: 0.34em;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /*
+   * The default lands ON the ramp. Without this, anything not carrying a
+   * `text-*` class inherited the browser's 16px — `--t-subhead`, louder than
+   * every deliberate label beside it, and the reason stray text read as a
+   * different size on every screen.
+   */
+  body {
+    font-size: var(--t-body);
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--c-dark-700)) rgb(var(--c-dark-900));
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: rgb(var(--c-dark-900));
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(var(--c-dark-700));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--c-dark-600));
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Kavas Capital — Legal",
+  "short_name": "Kavas Legal",
+  "description": "Kavas Capital partners' workspace: tasks, accounts and documents",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}
