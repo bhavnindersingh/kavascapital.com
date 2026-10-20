@@ -8,6 +8,9 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  # VITE_* values are compiled into the browser bundle on purpose (the
+  # Supabase URL and publishable key are public), so don't scan for them.
+  SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY"
 
 # Single-page app: any path that isn't a real file gets index.html.
 [[redirects]]
