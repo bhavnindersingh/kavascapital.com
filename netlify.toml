@@ -4,7 +4,7 @@
   command = "npm run build"
   publish = "dist"
   # Skip the build when a push only touched legal/.
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)legal'"
+  ignore = "[ -n \"$CACHED_COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- . ':(exclude)legal'"
 
 [build.environment]
   NODE_VERSION = "20"
